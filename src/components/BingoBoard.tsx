@@ -23,6 +23,32 @@ const BingoBoard = ({ predictions, onCellClick, editable = false, onCellEdit }: 
         {predictions.map((pred, index) => {
           const state = getCellState(pred);
           const isFreeSpace = pred.text === 'FREE SPACE';
+          const isEmpty = !pred.text.trim() && !isFreeSpace;
+
+          if (editable && !isFreeSpace) {
+            return (
+              <motion.div
+                key={pred.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.02 }}
+                className={cn(
+                  'bingo-cell aspect-square rounded-md border p-1 sm:p-2 flex items-center justify-center',
+                  'transition-all',
+                  isEmpty ? 'bg-secondary/50 border-border border-dashed' : 'bg-secondary border-primary/30'
+                )}
+              >
+                <textarea
+                  value={pred.text}
+                  onChange={(e) => onCellEdit?.(index, e.target.value)}
+                  className="w-full h-full bg-transparent text-center text-foreground text-[10px] sm:text-xs font-medium focus:outline-none focus:ring-1 focus:ring-primary/50 rounded resize-none flex items-center justify-center"
+                  maxLength={120}
+                  placeholder="Type prediction..."
+                  style={{ lineHeight: '1.3' }}
+                />
+              </motion.div>
+            );
+          }
 
           return (
             <motion.button
@@ -30,8 +56,7 @@ const BingoBoard = ({ predictions, onCellClick, editable = false, onCellEdit }: 
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: index * 0.02 }}
-              onClick={() => onCellClick?.(pred)}
-              disabled={editable}
+              onClick={() => !editable && onCellClick?.(pred)}
               className={cn(
                 'bingo-cell aspect-square rounded-md border p-1 sm:p-2 flex items-center justify-center text-center',
                 'text-[10px] sm:text-xs font-medium leading-tight',
@@ -58,19 +83,7 @@ const BingoBoard = ({ predictions, onCellClick, editable = false, onCellEdit }: 
                   state === 'pending' && 'text-racing-amber',
                   isFreeSpace && 'text-primary font-bold'
                 )}>
-                  {editable ? (
-                    <input
-                      type="text"
-                      value={pred.text}
-                      onChange={(e) => onCellEdit?.(index, e.target.value)}
-                      className="w-full bg-transparent text-center text-foreground text-[10px] sm:text-xs focus:outline-none"
-                      maxLength={120}
-                      placeholder="Enter prediction..."
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  ) : (
-                    pred.text
-                  )}
+                  {pred.text}
                 </span>
               </div>
             </motion.button>
