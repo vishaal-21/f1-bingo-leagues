@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Radio, Clock } from 'lucide-react';
+import { ArrowLeft, Radio, Clock, Lock, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { mockRaces, mockLeagues, mockBoard, mockClaims, mockMembers } from '@/data/mockData';
 import BingoBoard from '@/components/BingoBoard';
@@ -8,6 +9,15 @@ import ClaimsFeed from '@/components/ClaimsFeed';
 import SeasonLeaderboard from '@/components/SeasonLeaderboard';
 import { toast } from 'sonner';
 import { Prediction } from '@/types';
+
+const createEmptyPredictions = (): Prediction[] =>
+  Array.from({ length: 25 }, (_, i) => ({
+    id: `pred-${i}`,
+    boardId: 'new-board',
+    text: i === 12 ? 'FREE SPACE' : '',
+    positionIndex: i,
+    marked: false,
+  }));
 
 const RacePage = () => {
   const { leagueId, raceId } = useParams();
@@ -17,7 +27,42 @@ const RacePage = () => {
   const race = mockRaces.find((r) => r.id === raceId) || mockRaces[2];
   const members = mockMembers.filter((m) => m.leagueId === league.id);
 
+  const isEditable = race.status === 'upcoming' || race.status === 'locked';
+  const hasExistingBoard = race.status === 'live' || race.status === 'finished';
+
+  const [predictions, setPredictions] = useState<Prediction[]>(
+    hasExistingBoard ? mockBoard.predictions : createEmptyPredictions()
+  );
+  const [boardLocked, setBoardLocked] = useState(hasExistingBoard);
+
+  const filledCount = predictions.filter((p) => p.text.trim() !== '' && p.text !== 'FREE SPACE').length;
+  const canLock = filledCount === 24; // 24 custom + 1 free space
+
+  const handleCellEdit = (index: number, text: string) => {
+    if (boardLocked) return;
+    setPredictions((prev) =>
+      prev.map((p, i) => (i === index ? { ...p, text } : p))
+    );
+  };
+
+  const handleLockBoard = () => {
+    if (!canLock) {
+      toast.error(`Fill all 24 predictions before locking (${filledCount}/24 filled)`);
+      return;
+    }
+    // Check for duplicates
+    const texts = predictions.filter(p => p.text !== 'FREE SPACE').map(p => p.text.trim().toLowerCase());
+    const dupes = texts.filter((t, i) => texts.indexOf(t) !== i);
+    if (dupes.length > 0) {
+      toast.error(`Remove duplicate predictions: "${dupes[0]}"`);
+      return;
+    }
+    setBoardLocked(true);
+    toast.success('Board locked! Good luck 🏁');
+  };
+
   const handleCellClick = (prediction: Prediction) => {
+    if (!boardLocked) return;
     if (prediction.confirmedAt) {
       toast.info('This prediction is already confirmed');
       return;
@@ -26,6 +71,7 @@ const RacePage = () => {
       toast.info('Claim already pending for this prediction');
       return;
     }
+    if (!prediction.text.trim()) return;
     toast.success(`Claim submitted: "${prediction.text}"`);
   };
 
@@ -35,7 +81,6 @@ const RacePage = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border">
         <div className="container max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
@@ -69,7 +114,6 @@ const RacePage = () => {
         </div>
       </header>
 
-      {/* Main Layout */}
       <main className="container max-w-7xl mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr_280px] gap-6">
           {/* Left: Leaderboard */}
@@ -87,20 +131,62 @@ const RacePage = () => {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-4"
           >
-            <div className="text-center space-y-1">
-              <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Your Board</h2>
-              <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-racing-green/40 border border-racing-green/60" />
-                  Confirmed
-                </span>
-                <span className="flex items-center gap-1">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-racing-amber/40 border border-racing-amber/60" />
-                  Pending
-                </span>
-              </div>
+            <div className="text-center space-y-2">
+              <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                {boardLocked ? 'Your Board' : 'Build Your Board'}
+              </h2>
+
+              {!boardLocked ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                    <Pencil className="w-3 h-3" />
+                    <span>Click each cell to type your prediction ({filledCount}/24)</span>
+                  </div>
+                  <div className="w-full max-w-[600px] mx-auto">
+                    <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full bg-primary"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(filledCount / 24) * 100}%` }}
+                        transition={{ duration: 0.3 }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-racing-green/40 border border-racing-green/60" />
+                    Confirmed
+                  </span>
+                  <span className="flex items-center gap-1">
+                    <span className="w-2.5 h-2.5 rounded-sm bg-racing-amber/40 border border-racing-amber/60" />
+                    Pending
+                  </span>
+                </div>
+              )}
             </div>
-            <BingoBoard predictions={mockBoard.predictions} onCellClick={handleCellClick} />
+
+            <BingoBoard
+              predictions={predictions}
+              onCellClick={handleCellClick}
+              editable={!boardLocked}
+              onCellEdit={handleCellEdit}
+            />
+
+            {!boardLocked && (
+              <div className="flex justify-center">
+                <Button
+                  onClick={handleLockBoard}
+                  disabled={!canLock}
+                  className="gap-2"
+                  size="lg"
+                >
+                  <Lock className="w-4 h-4" />
+                  Lock Board ({filledCount}/24)
+                </Button>
+              </div>
+            )}
           </motion.div>
 
           {/* Right: Claims Feed */}
@@ -109,11 +195,19 @@ const RacePage = () => {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-4"
           >
-            <ClaimsFeed claims={mockClaims} onVote={handleVote} />
+            {boardLocked && <ClaimsFeed claims={mockClaims} onVote={handleVote} />}
+            {!boardLocked && (
+              <div className="rounded-lg border border-border p-4 text-center space-y-2">
+                <Lock className="w-8 h-8 mx-auto text-muted-foreground" />
+                <p className="text-sm font-semibold">Claims Locked</p>
+                <p className="text-xs text-muted-foreground">
+                  Fill in and lock your board to participate in claims and voting
+                </p>
+              </div>
+            )}
           </motion.aside>
         </div>
 
-        {/* Mobile Leaderboard */}
         <div className="lg:hidden mt-6">
           <SeasonLeaderboard members={members} />
         </div>
