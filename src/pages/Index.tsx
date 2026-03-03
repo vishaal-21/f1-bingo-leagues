@@ -1,13 +1,19 @@
 import { Flag, Users, Trophy, ChevronRight } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useLeagues } from '@/context/LeagueContext';
+import { useAuth } from '@/context/AuthContext';
 import CreateLeagueDialog from '@/components/CreateLeagueDialog';
 import JoinLeagueDialog from '@/components/JoinLeagueDialog';
 
 const Index = () => {
   const navigate = useNavigate();
   const { leagues } = useLeagues();
+  const { user, isLoading } = useAuth();
+
+  if (!isLoading && !user) {
+    return <Navigate to="/" />;
+  }
 
   return (
     <div className="min-h-screen bg-background">
