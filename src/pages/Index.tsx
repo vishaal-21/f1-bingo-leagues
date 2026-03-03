@@ -1,16 +1,16 @@
 import { Flag, Users, Trophy, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { mockLeagues } from '@/data/mockData';
+import { useLeagues } from '@/context/LeagueContext';
 import CreateLeagueDialog from '@/components/CreateLeagueDialog';
 import JoinLeagueDialog from '@/components/JoinLeagueDialog';
 
 const Index = () => {
   const navigate = useNavigate();
+  const { leagues } = useLeagues();
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <header className="border-b border-border">
         <div className="container max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -31,7 +31,6 @@ const Index = () => {
       </header>
 
       <main className="container max-w-5xl mx-auto px-4 py-8 space-y-8">
-        {/* Hero */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -49,9 +48,8 @@ const Index = () => {
           </div>
         </motion.section>
 
-        {/* Leagues Grid */}
         <section className="grid gap-4 sm:grid-cols-2">
-          {mockLeagues.map((league, index) => (
+          {leagues.map((league, index) => (
             <motion.div
               key={league.id}
               initial={{ opacity: 0, y: 20 }}
@@ -69,7 +67,6 @@ const Index = () => {
                 </div>
                 <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
-
               <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <Users className="w-3.5 h-3.5" />
@@ -80,7 +77,6 @@ const Index = () => {
                   {league.scoringMode === 'points' ? 'Points' : 'Classic'}
                 </span>
               </div>
-
               <div className="mt-3 pt-3 border-t border-border">
                 <p className="text-[10px] text-muted-foreground font-mono">
                   INVITE: {league.inviteCode}
@@ -90,10 +86,9 @@ const Index = () => {
           ))}
         </section>
 
-        {/* Quick Stats */}
         <section className="grid grid-cols-3 gap-4">
           {[
-            { label: 'Active Leagues', value: '2', icon: Flag },
+            { label: 'Active Leagues', value: String(leagues.length), icon: Flag },
             { label: 'Total Points', value: '385', icon: Trophy },
             { label: 'Predictions Made', value: '50', icon: Users },
           ].map((stat, i) => (

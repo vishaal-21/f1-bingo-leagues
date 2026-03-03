@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Radio, Clock, Lock, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { mockRaces, mockLeagues, mockMembers, currentUser } from '@/data/mockData';
+import { getRacesForLeague, mockMembers, currentUser } from '@/data/mockData';
+import { useLeagues } from '@/context/LeagueContext';
 import BingoBoard from '@/components/BingoBoard';
 import ClaimsFeed from '@/components/ClaimsFeed';
 import SeasonLeaderboard from '@/components/SeasonLeaderboard';
@@ -24,8 +25,10 @@ const RacePage = () => {
   const { leagueId, raceId } = useParams();
   const navigate = useNavigate();
 
-  const league = mockLeagues.find((l) => l.id === leagueId) || mockLeagues[0];
-  const race = mockRaces.find((r) => r.id === raceId) || mockRaces[2];
+  const { leagues } = useLeagues();
+  const league = leagues.find((l) => l.id === leagueId) || leagues[0];
+  const races = getRacesForLeague(league.id);
+  const race = races.find((r) => r.id === raceId) || races[0];
   const members = mockMembers.filter((m) => m.leagueId === league.id);
 
   const [predictions, setPredictions] = useState<Prediction[]>(createEmptyPredictions());

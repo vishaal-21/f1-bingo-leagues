@@ -48,13 +48,70 @@ export const mockMembers: LeagueMember[] = [
   { id: 'm6', leagueId: 'league-1', userId: 'user-6', user: users[5], cumulativePoints: 180, totalCorrectPredictions: 12, totalBingos: 0, joinedAt: '2026-01-22T15:00:00Z' },
 ];
 
-export const mockRaces: Race[] = [
-  { id: 'race-1', leagueId: 'league-1', name: 'Australian Grand Prix', scheduledStartTime: '2026-03-15T05:00:00Z', lockTime: '2026-03-15T04:00:00Z', status: 'finished', country: 'Australia', flagEmoji: '🇦🇺' },
-  { id: 'race-2', leagueId: 'league-1', name: 'Chinese Grand Prix', scheduledStartTime: '2026-03-29T07:00:00Z', lockTime: '2026-03-29T06:00:00Z', status: 'finished', country: 'China', flagEmoji: '🇨🇳' },
-  { id: 'race-3', leagueId: 'league-1', name: 'Monaco Grand Prix', scheduledStartTime: '2026-05-24T13:00:00Z', lockTime: '2026-05-24T12:00:00Z', status: 'live', country: 'Monaco', flagEmoji: '🇲🇨' },
-  { id: 'race-4', leagueId: 'league-1', name: 'British Grand Prix', scheduledStartTime: '2026-07-05T14:00:00Z', lockTime: '2026-07-05T13:00:00Z', status: 'upcoming', country: 'United Kingdom', flagEmoji: '🇬🇧' },
-  { id: 'race-5', leagueId: 'league-1', name: 'Italian Grand Prix', scheduledStartTime: '2026-09-06T13:00:00Z', lockTime: '2026-09-06T12:00:00Z', status: 'upcoming', country: 'Italy', flagEmoji: '🇮🇹' },
+// Helper to determine race status based on current date
+const getRaceStatus = (raceDate: string): Race['status'] => {
+  const now = new Date();
+  const race = new Date(raceDate);
+  const raceWeekStart = new Date(race);
+  raceWeekStart.setDate(raceWeekStart.getDate() - 3); // Wednesday before race Sunday
+
+  if (now > race) return 'finished';
+  // For demo purposes, make first race in the future "live" if within race day
+  if (now >= raceWeekStart && now <= race) return 'upcoming'; // race week = board unlocked
+  return 'upcoming';
+};
+
+// Full 2026 F1 Calendar
+export const f1Calendar2026: Omit<Race, 'leagueId'>[] = [
+  { id: 'race-aus', name: 'Australian Grand Prix', scheduledStartTime: '2026-03-15T05:00:00Z', lockTime: '2026-03-15T04:00:00Z', status: 'upcoming', country: 'Australia', flagEmoji: '🇦🇺' },
+  { id: 'race-chn', name: 'Chinese Grand Prix', scheduledStartTime: '2026-03-29T07:00:00Z', lockTime: '2026-03-29T06:00:00Z', status: 'upcoming', country: 'China', flagEmoji: '🇨🇳' },
+  { id: 'race-jpn', name: 'Japanese Grand Prix', scheduledStartTime: '2026-04-05T06:00:00Z', lockTime: '2026-04-05T05:00:00Z', status: 'upcoming', country: 'Japan', flagEmoji: '🇯🇵' },
+  { id: 'race-bhr', name: 'Bahrain Grand Prix', scheduledStartTime: '2026-04-12T15:00:00Z', lockTime: '2026-04-12T14:00:00Z', status: 'upcoming', country: 'Bahrain', flagEmoji: '🇧🇭' },
+  { id: 'race-ksa', name: 'Saudi Arabian Grand Prix', scheduledStartTime: '2026-04-19T17:00:00Z', lockTime: '2026-04-19T16:00:00Z', status: 'upcoming', country: 'Saudi Arabia', flagEmoji: '🇸🇦' },
+  { id: 'race-mia', name: 'Miami Grand Prix', scheduledStartTime: '2026-05-03T19:00:00Z', lockTime: '2026-05-03T18:00:00Z', status: 'upcoming', country: 'United States', flagEmoji: '🇺🇸' },
+  { id: 'race-imo', name: 'Emilia Romagna Grand Prix', scheduledStartTime: '2026-05-17T13:00:00Z', lockTime: '2026-05-17T12:00:00Z', status: 'upcoming', country: 'Italy', flagEmoji: '🇮🇹' },
+  { id: 'race-mon', name: 'Monaco Grand Prix', scheduledStartTime: '2026-05-24T13:00:00Z', lockTime: '2026-05-24T12:00:00Z', status: 'upcoming', country: 'Monaco', flagEmoji: '🇲🇨' },
+  { id: 'race-esp', name: 'Spanish Grand Prix', scheduledStartTime: '2026-06-07T13:00:00Z', lockTime: '2026-06-07T12:00:00Z', status: 'upcoming', country: 'Spain', flagEmoji: '🇪🇸' },
+  { id: 'race-can', name: 'Canadian Grand Prix', scheduledStartTime: '2026-06-14T18:00:00Z', lockTime: '2026-06-14T17:00:00Z', status: 'upcoming', country: 'Canada', flagEmoji: '🇨🇦' },
+  { id: 'race-aut', name: 'Austrian Grand Prix', scheduledStartTime: '2026-06-28T13:00:00Z', lockTime: '2026-06-28T12:00:00Z', status: 'upcoming', country: 'Austria', flagEmoji: '🇦🇹' },
+  { id: 'race-gbr', name: 'British Grand Prix', scheduledStartTime: '2026-07-05T14:00:00Z', lockTime: '2026-07-05T13:00:00Z', status: 'upcoming', country: 'United Kingdom', flagEmoji: '🇬🇧' },
+  { id: 'race-bel', name: 'Belgian Grand Prix', scheduledStartTime: '2026-07-26T13:00:00Z', lockTime: '2026-07-26T12:00:00Z', status: 'upcoming', country: 'Belgium', flagEmoji: '🇧🇪' },
+  { id: 'race-hun', name: 'Hungarian Grand Prix', scheduledStartTime: '2026-08-02T13:00:00Z', lockTime: '2026-08-02T12:00:00Z', status: 'upcoming', country: 'Hungary', flagEmoji: '🇭🇺' },
+  { id: 'race-ned', name: 'Dutch Grand Prix', scheduledStartTime: '2026-08-30T13:00:00Z', lockTime: '2026-08-30T12:00:00Z', status: 'upcoming', country: 'Netherlands', flagEmoji: '🇳🇱' },
+  { id: 'race-ita', name: 'Italian Grand Prix', scheduledStartTime: '2026-09-06T13:00:00Z', lockTime: '2026-09-06T12:00:00Z', status: 'upcoming', country: 'Italy', flagEmoji: '🇮🇹' },
+  { id: 'race-aze', name: 'Azerbaijan Grand Prix', scheduledStartTime: '2026-09-20T11:00:00Z', lockTime: '2026-09-20T10:00:00Z', status: 'upcoming', country: 'Azerbaijan', flagEmoji: '🇦🇿' },
+  { id: 'race-sgp', name: 'Singapore Grand Prix', scheduledStartTime: '2026-10-04T12:00:00Z', lockTime: '2026-10-04T11:00:00Z', status: 'upcoming', country: 'Singapore', flagEmoji: '🇸🇬' },
+  { id: 'race-usa', name: 'United States Grand Prix', scheduledStartTime: '2026-10-18T19:00:00Z', lockTime: '2026-10-18T18:00:00Z', status: 'upcoming', country: 'United States', flagEmoji: '🇺🇸' },
+  { id: 'race-mex', name: 'Mexico City Grand Prix', scheduledStartTime: '2026-10-25T20:00:00Z', lockTime: '2026-10-25T19:00:00Z', status: 'upcoming', country: 'Mexico', flagEmoji: '🇲🇽' },
+  { id: 'race-bra', name: 'São Paulo Grand Prix', scheduledStartTime: '2026-11-08T17:00:00Z', lockTime: '2026-11-08T16:00:00Z', status: 'upcoming', country: 'Brazil', flagEmoji: '🇧🇷' },
+  { id: 'race-lvs', name: 'Las Vegas Grand Prix', scheduledStartTime: '2026-11-22T04:00:00Z', lockTime: '2026-11-22T03:00:00Z', status: 'upcoming', country: 'United States', flagEmoji: '🇺🇸' },
+  { id: 'race-qat', name: 'Qatar Grand Prix', scheduledStartTime: '2026-11-29T14:00:00Z', lockTime: '2026-11-29T13:00:00Z', status: 'upcoming', country: 'Qatar', flagEmoji: '🇶🇦' },
+  { id: 'race-abd', name: 'Abu Dhabi Grand Prix', scheduledStartTime: '2026-12-06T13:00:00Z', lockTime: '2026-12-06T12:00:00Z', status: 'upcoming', country: 'Abu Dhabi', flagEmoji: '🇦🇪' },
 ];
+
+// Generate races for a league with proper status based on current date
+export const getRacesForLeague = (leagueId: string): Race[] => {
+  const now = new Date();
+  return f1Calendar2026.map((race) => {
+    const raceDate = new Date(race.scheduledStartTime);
+    const raceWeekStart = new Date(raceDate);
+    raceWeekStart.setDate(raceWeekStart.getDate() - 3);
+
+    let status: Race['status'];
+    if (now > raceDate) {
+      status = 'finished';
+    } else if (now >= raceWeekStart && now <= raceDate) {
+      status = 'upcoming'; // Race week = board can be filled
+    } else {
+      status = 'locked'; // Not race week yet = disabled
+    }
+
+    return { ...race, leagueId, status };
+  });
+};
+
+// Keep old mockRaces for backward compat but use getRacesForLeague in league page
+export const mockRaces: Race[] = getRacesForLeague('league-1');
 
 const predictionTexts = [
   'Safety car in first 5 laps', 'Red flag shown', 'Verstappen leads lap 1',
@@ -70,7 +127,7 @@ const predictionTexts = [
 
 export const mockBoard: Board = {
   id: 'board-1',
-  raceId: 'race-3',
+  raceId: 'race-mon',
   userId: 'user-1',
   locked: true,
   predictions: predictionTexts.map((text, i) => ({

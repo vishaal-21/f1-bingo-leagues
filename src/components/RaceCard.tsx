@@ -1,6 +1,6 @@
 import { Race } from '@/types';
 import { motion } from 'framer-motion';
-import { Clock, Radio, CheckCircle2, Calendar } from 'lucide-react';
+import { Clock, Radio, CheckCircle2, Calendar, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 
@@ -9,8 +9,8 @@ interface RaceCardProps {
 }
 
 const statusConfig = {
-  upcoming: { label: 'Upcoming', icon: Calendar, color: 'text-muted-foreground', bg: 'bg-secondary' },
-  locked: { label: 'Locked', icon: Clock, color: 'text-racing-amber', bg: 'bg-racing-amber/10' },
+  upcoming: { label: 'Race Week', icon: Calendar, color: 'text-racing-green', bg: 'bg-racing-green/10' },
+  locked: { label: 'Not Yet Open', icon: Lock, color: 'text-muted-foreground', bg: 'bg-secondary' },
   live: { label: 'LIVE', icon: Radio, color: 'text-racing-red', bg: 'bg-racing-red/10' },
   finished: { label: 'Finished', icon: CheckCircle2, color: 'text-racing-green', bg: 'bg-racing-green/10' },
 };
@@ -20,14 +20,23 @@ const RaceCard = ({ race }: RaceCardProps) => {
   const config = statusConfig[race.status];
   const StatusIcon = config.icon;
   const raceDate = new Date(race.scheduledStartTime);
+  const isDisabled = race.status === 'locked';
+
+  const handleClick = () => {
+    if (isDisabled) return;
+    navigate(`/league/${race.leagueId}/race/${race.id}`);
+  };
 
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={() => navigate(`/league/${race.leagueId}/race/${race.id}`)}
+      whileHover={isDisabled ? {} : { scale: 1.02 }}
+      whileTap={isDisabled ? {} : { scale: 0.98 }}
+      onClick={handleClick}
       className={cn(
-        'rounded-lg border p-4 cursor-pointer transition-colors hover:border-primary/30',
+        'rounded-lg border p-4 transition-colors',
+        isDisabled
+          ? 'opacity-50 cursor-not-allowed border-border'
+          : 'cursor-pointer hover:border-primary/30',
         race.status === 'live' && 'border-racing-red/30 glow-red'
       )}
     >

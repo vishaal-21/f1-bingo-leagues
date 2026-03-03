@@ -5,20 +5,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus } from 'lucide-react';
-import { toast } from 'sonner';
+import { useLeagues } from '@/context/LeagueContext';
+import { ScoringMode } from '@/types';
 
 const CreateLeagueDialog = () => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
-  const [scoringMode, setScoringMode] = useState('points');
+  const [scoringMode, setScoringMode] = useState<ScoringMode>('points');
+  const { createLeague } = useLeagues();
 
   const handleCreate = () => {
     if (!name.trim()) {
-      toast.error('League name is required');
       return;
     }
-    const code = `${name.slice(0, 3).toUpperCase()}-${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-    toast.success(`League "${name}" created! Invite code: ${code}`);
+    createLeague(name, scoringMode);
     setOpen(false);
     setName('');
   };
@@ -46,7 +46,7 @@ const CreateLeagueDialog = () => {
           </div>
           <div className="space-y-2">
             <Label>Scoring Mode</Label>
-            <Select value={scoringMode} onValueChange={setScoringMode}>
+            <Select value={scoringMode} onValueChange={(v) => setScoringMode(v as ScoringMode)}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
