@@ -4,20 +4,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { UserPlus } from 'lucide-react';
-import { toast } from 'sonner';
+import { useLeagues } from '@/context/LeagueContext';
 
 const JoinLeagueDialog = () => {
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState('');
+  const { joinLeague } = useLeagues();
 
   const handleJoin = () => {
-    if (!code.trim()) {
-      toast.error('Please enter an invite code');
-      return;
+    if (!code.trim()) return;
+    const success = joinLeague(code);
+    if (success) {
+      setOpen(false);
+      setCode('');
     }
-    toast.success(`Joined league with code: ${code}`);
-    setOpen(false);
-    setCode('');
   };
 
   return (

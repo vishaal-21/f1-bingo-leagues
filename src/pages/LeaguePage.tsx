@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Copy, Flag, Settings } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { mockLeagues, mockRaces, mockMembers } from '@/data/mockData';
+import { getRacesForLeague, mockMembers } from '@/data/mockData';
+import { useLeagues } from '@/context/LeagueContext';
 import RaceCard from '@/components/RaceCard';
 import SeasonLeaderboard from '@/components/SeasonLeaderboard';
 import { toast } from 'sonner';
@@ -11,12 +12,14 @@ import { toast } from 'sonner';
 const LeaguePage = () => {
   const { leagueId } = useParams();
   const navigate = useNavigate();
-  const league = mockLeagues.find((l) => l.id === leagueId) || mockLeagues[0];
-  const races = mockRaces.filter((r) => r.leagueId === league.id);
+  const { leagues } = useLeagues();
+  const league = leagues.find((l) => l.id === leagueId) || leagues[0];
+  const races = getRacesForLeague(league.id);
   const members = mockMembers.filter((m) => m.leagueId === league.id);
 
   const liveRace = races.find((r) => r.status === 'live');
-  const upcomingRaces = races.filter((r) => r.status === 'upcoming' || r.status === 'locked');
+  const raceWeekRaces = races.filter((r) => r.status === 'upcoming');
+  const lockedRaces = races.filter((r) => r.status === 'locked');
   const pastRaces = races.filter((r) => r.status === 'finished');
 
   const copyInviteCode = () => {
@@ -62,7 +65,7 @@ const LeaguePage = () => {
       <main className="container max-w-5xl mx-auto px-4 py-6">
         <Tabs defaultValue="races" className="space-y-6">
           <TabsList className="bg-secondary">
-            <TabsTrigger value="races">Races</TabsTrigger>
+            <TabsTrigger value="races">Races ({races.length})</TabsTrigger>
             <TabsTrigger value="leaderboard">Leaderboard</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
           </TabsList>
@@ -78,11 +81,22 @@ const LeaguePage = () => {
               </div>
             )}
 
-            {upcomingRaces.length > 0 && (
+            {raceWeekRaces.length > 0 && (
               <div className="space-y-2">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Upcoming</h3>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-racing-green">Race Week – Board Open</h3>
                 <div className="space-y-2">
-                  {upcomingRaces.map((race) => (
+                  {raceWeekRaces.map((race) => (
+                    <RaceCard key={race.id} race={race} />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {lockedRaces.length > 0 && (
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Upcoming (opens race week)</h3>
+                <div className="space-y-2">
+                  {lockedRaces.map((race) => (
                     <RaceCard key={race.id} race={race} />
                   ))}
                 </div>
