@@ -63,7 +63,7 @@ const getRaceStatus = (raceDate: string): Race['status'] => {
 
 // Full 2026 F1 Calendar
 export const f1Calendar2026: Omit<Race, 'leagueId'>[] = [
-  { id: 'race-aus', name: 'Australian Grand Prix', scheduledStartTime: '2026-03-15T05:00:00Z', lockTime: '2026-03-15T04:00:00Z', status: 'upcoming', country: 'Australia', flagEmoji: '🇦🇺' },
+  { id: 'race-aus', name: 'Australian Grand Prix', scheduledStartTime: '2026-03-08T05:00:00Z', lockTime: '2026-03-08T04:00:00Z', status: 'upcoming', country: 'Australia', flagEmoji: '🇦🇺' },
   { id: 'race-chn', name: 'Chinese Grand Prix', scheduledStartTime: '2026-03-29T07:00:00Z', lockTime: '2026-03-29T06:00:00Z', status: 'upcoming', country: 'China', flagEmoji: '🇨🇳' },
   { id: 'race-jpn', name: 'Japanese Grand Prix', scheduledStartTime: '2026-04-05T06:00:00Z', lockTime: '2026-04-05T05:00:00Z', status: 'upcoming', country: 'Japan', flagEmoji: '🇯🇵' },
   { id: 'race-bhr', name: 'Bahrain Grand Prix', scheduledStartTime: '2026-04-12T15:00:00Z', lockTime: '2026-04-12T14:00:00Z', status: 'upcoming', country: 'Bahrain', flagEmoji: '🇧🇭' },
@@ -95,7 +95,7 @@ export const getRacesForLeague = (leagueId: string): Race[] => {
   return f1Calendar2026.map((race) => {
     const raceDate = new Date(race.scheduledStartTime);
     const raceWeekStart = new Date(raceDate);
-    raceWeekStart.setDate(raceWeekStart.getDate() - 3);
+    raceWeekStart.setDate(raceWeekStart.getDate() - 6); // Monday of race week
 
     let status: Race['status'];
     if (now > raceDate) {
