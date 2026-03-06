@@ -1,6 +1,6 @@
 import { Prediction } from '@/types';
 import { motion } from 'framer-motion';
-import { Check, Clock, Star } from 'lucide-react';
+import { Check, Clock, Star, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface BingoBoardProps {
@@ -8,11 +8,12 @@ interface BingoBoardProps {
   onCellClick?: (prediction: Prediction) => void;
   editable?: boolean;
   onCellEdit?: (index: number, text: string) => void;
+  highlightedCells?: Set<number>;
 }
 
-const BingoBoard = ({ predictions, onCellClick, editable = false, onCellEdit }: BingoBoardProps) => {
+const BingoBoard = ({ predictions, onCellClick, editable = false, onCellEdit, highlightedCells }: BingoBoardProps) => {
   const getCellState = (pred: Prediction) => {
-    if (pred.confirmedAt) return 'confirmed';
+    if (pred.confirmedAt != null) return 'confirmed';
     if (pred.marked) return 'pending';
     return 'default';
   };
@@ -24,6 +25,7 @@ const BingoBoard = ({ predictions, onCellClick, editable = false, onCellEdit }: 
           const state = getCellState(pred);
           const isFreeSpace = pred.text === 'FREE SPACE';
           const isEmpty = !pred.text.trim() && !isFreeSpace;
+          const isHighlighted = highlightedCells?.has(pred.positionIndex) || false;
 
           if (editable && !isFreeSpace) {
             return (
@@ -60,14 +62,18 @@ const BingoBoard = ({ predictions, onCellClick, editable = false, onCellEdit }: 
               className={cn(
                 'bingo-cell aspect-square rounded-md border p-1 sm:p-2 flex items-center justify-center text-center',
                 'text-[10px] sm:text-xs font-medium leading-tight',
-                'hover:border-primary/50 transition-all cursor-pointer',
+                'hover:border-primary/50 transition-all cursor-pointer relative',
                 state === 'confirmed' && 'bg-racing-green/20 border-racing-green/50',
                 state === 'pending' && 'bg-racing-amber/20 border-racing-amber/50',
                 state === 'default' && 'bg-secondary border-border hover:bg-accent',
-                isFreeSpace && 'bg-primary/20 border-primary/50'
+                isFreeSpace && 'bg-primary/20 border-primary/50',
+                isHighlighted && state === 'confirmed' && 'ring-2 ring-yellow-500 ring-offset-2 ring-offset-background'
               )}
             >
               <div className="relative w-full h-full flex flex-col items-center justify-center gap-0.5">
+                {isHighlighted && state === 'confirmed' && (
+                  <Sparkles className="w-3 h-3 text-yellow-500 absolute -top-1 -left-1 animate-pulse" />
+                )}
                 {state === 'confirmed' && (
                   <Check className="w-3 h-3 sm:w-4 sm:h-4 text-racing-green absolute -top-0.5 -right-0.5" />
                 )}

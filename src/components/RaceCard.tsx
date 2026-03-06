@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Clock, Radio, CheckCircle2, Calendar, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { CountryFlag } from './CountryFlag';
 
 interface RaceCardProps {
   race: Race;
@@ -24,7 +25,12 @@ const RaceCard = ({ race }: RaceCardProps) => {
 
   const handleClick = () => {
     if (isDisabled) return;
-    navigate(`/league/${race.leagueId}/race/${race.id}`);
+    // Navigate to standalone mode if no leagueId, otherwise league-specific
+    if (race.leagueId) {
+      navigate(`/league/${race.leagueId}/race/${race.id}`);
+    } else {
+      navigate(`/race/${race.id}`);
+    }
   };
 
   return (
@@ -43,8 +49,13 @@ const RaceCard = ({ race }: RaceCardProps) => {
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-xl">{race.flagEmoji}</span>
+            <CountryFlag country={race.country} className="w-6 h-4 rounded-sm object-cover" />
             <h4 className="font-bold text-sm">{race.name}</h4>
+            {race.isSprintWeekend && (
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-racing-yellow/20 text-racing-yellow border border-racing-yellow/30">
+                SPRINT
+              </span>
+            )}
           </div>
           <p className="text-xs text-muted-foreground">
             {raceDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}

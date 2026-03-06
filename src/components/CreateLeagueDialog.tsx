@@ -12,13 +12,16 @@ const CreateLeagueDialog = () => {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [scoringMode, setScoringMode] = useState<ScoringMode>('points');
+  const [loading, setLoading] = useState(false);
   const { createLeague } = useLeagues();
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!name.trim()) {
       return;
     }
-    createLeague(name, scoringMode);
+    setLoading(true);
+    await createLeague(name, scoringMode);
+    setLoading(false);
     setOpen(false);
     setName('');
   };
@@ -56,8 +59,8 @@ const CreateLeagueDialog = () => {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={handleCreate} className="w-full">
-            Create League
+          <Button onClick={handleCreate} className="w-full" disabled={loading || !name.trim()}>
+            {loading ? 'Creating...' : 'Create League'}
           </Button>
         </div>
       </DialogContent>

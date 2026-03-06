@@ -1,4 +1,4 @@
-import { Claim } from '@/types';
+import { Claim, User } from '@/types';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, X, Clock, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,10 +6,11 @@ import { cn } from '@/lib/utils';
 
 interface ClaimsFeedProps {
   claims: Claim[];
+  currentUser: User;
   onVote?: (claimId: string, approve: boolean) => void;
 }
 
-const ClaimsFeed = ({ claims, onVote }: ClaimsFeedProps) => {
+const ClaimsFeed = ({ claims, currentUser, onVote }: ClaimsFeedProps) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved': return <Check className="w-4 h-4 text-racing-green" />;
@@ -57,26 +58,30 @@ const ClaimsFeed = ({ claims, onVote }: ClaimsFeedProps) => {
               </div>
 
               {claim.status === 'pending' && (
-                <div className="flex gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 px-2 text-xs hover:bg-racing-green/20 hover:text-racing-green"
-                    onClick={() => onVote?.(claim.id, true)}
-                  >
-                    <ThumbsUp className="w-3 h-3 mr-1" />
-                    Yes
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 px-2 text-xs hover:bg-destructive/20 hover:text-destructive"
-                    onClick={() => onVote?.(claim.id, false)}
-                  >
-                    <ThumbsDown className="w-3 h-3 mr-1" />
-                    No
-                  </Button>
-                </div>
+                claim.claimedBy.id === currentUser.id ? (
+                  <p className="text-xs text-muted-foreground italic">Your claim</p>
+                ) : (
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs hover:bg-racing-green/20 hover:text-racing-green"
+                      onClick={() => onVote?.(claim.id, true)}
+                    >
+                      <ThumbsUp className="w-3 h-3 mr-1" />
+                      Yes
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 text-xs hover:bg-destructive/20 hover:text-destructive"
+                      onClick={() => onVote?.(claim.id, false)}
+                    >
+                      <ThumbsDown className="w-3 h-3 mr-1" />
+                      No
+                    </Button>
+                  </div>
+                )
               )}
             </div>
           </motion.div>
