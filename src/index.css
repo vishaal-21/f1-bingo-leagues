@@ -43,8 +43,10 @@
     --warning-foreground: 0 0% 10%;
 
     --racing-red: 0 85% 45%;
-    --racing-green: 145 60% 40%;
+    --racing-green: 145 80% 55%;
     --racing-amber: 38 90% 50%;
+    --racing-yellow: 45 93% 47%;
+    --highlight-cyan: 180 85% 55%;
     --carbon: 220 20% 7%;
     --carbon-light: 220 18% 12%;
 
@@ -69,7 +71,12 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-display);
+    font-family: var(--font-display), "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", sans-serif;
+  }
+
+  /* Ensure all elements inherit emoji fonts */
+  * {
+    font-family: inherit;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -145,5 +152,13 @@
 
   .animate-slide-up {
     animation: slide-up 0.3s ease-out;
+  }
+}
+
+@layer utilities {
+  .emoji {
+    font-family: "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji", "Twemoji Mozilla", "EmojiOne Color", sans-serif;
+    font-style: normal;
+    font-weight: normal;
   }
 }

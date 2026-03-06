@@ -1,0 +1,3 @@
+-- This file is no longer needed.
+-- League member stats (cumulative_points) are now only updated when race is finalized by admin.
+-- No user-level UPDATE policy is required.

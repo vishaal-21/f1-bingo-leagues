@@ -62,6 +62,8 @@ export default {
         "racing-red": "hsl(var(--racing-red))",
         "racing-green": "hsl(var(--racing-green))",
         "racing-amber": "hsl(var(--racing-amber))",
+        "racing-yellow": "hsl(var(--racing-yellow))",
+        "highlight-cyan": "hsl(var(--highlight-cyan))",
         carbon: "hsl(var(--carbon))",
         "carbon-light": "hsl(var(--carbon-light))",
         sidebar: {

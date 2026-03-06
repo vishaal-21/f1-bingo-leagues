@@ -9,11 +9,14 @@ import { useLeagues } from '@/context/LeagueContext';
 const JoinLeagueDialog = () => {
   const [open, setOpen] = useState(false);
   const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
   const { joinLeague } = useLeagues();
 
-  const handleJoin = () => {
+  const handleJoin = async () => {
     if (!code.trim()) return;
-    const success = joinLeague(code);
+    setLoading(true);
+    const success = await joinLeague(code);
+    setLoading(false);
     if (success) {
       setOpen(false);
       setCode('');
@@ -45,8 +48,8 @@ const JoinLeagueDialog = () => {
               Ask your league admin for the invite code
             </p>
           </div>
-          <Button onClick={handleJoin} className="w-full">
-            Join League
+          <Button onClick={handleJoin} className="w-full" disabled={loading || !code.trim()}>
+            {loading ? 'Joining...' : 'Join League'}
           </Button>
         </div>
       </DialogContent>

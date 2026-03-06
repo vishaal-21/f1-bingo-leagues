@@ -37,9 +37,11 @@ export interface Race {
   name: string;
   scheduledStartTime: string;
   lockTime: string;
+  finishTime: string;
   status: RaceStatus;
   country: string;
   flagEmoji: string;
+  isSprintWeekend?: boolean;
 }
 
 export interface Prediction {
