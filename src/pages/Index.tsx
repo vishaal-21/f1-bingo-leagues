@@ -7,6 +7,7 @@ import { useLeagues } from '@/context/LeagueContext';
 import { useRaces } from '@/context/RaceContext';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
+import { cn } from '@/lib/utils';
 import CreateLeagueDialog from '@/components/CreateLeagueDialog';
 import JoinLeagueDialog from '@/components/JoinLeagueDialog';
 import HowToPlayDialog from '@/components/HowToPlayDialog';
@@ -24,6 +25,7 @@ interface BoardResult {
   accuracy: number;
   totalPredictions: number;
   completedAt: string;
+  isDNP?: boolean; // Did Not Participate
 }
 
 const Index = () => {
@@ -36,7 +38,7 @@ const Index = () => {
   const [resultsLoading, setResultsLoading] = useState(true);
   const activeTab = searchParams.get('tab') || 'home';
 
-  // Fetch user's board results for completed races
+  // Fetch user's board results for completed races (including DNP races)
   useEffect(() => {
     const fetchBoardResults = async () => {
       if (!user) return;
@@ -44,7 +46,15 @@ const Index = () => {
       try {
         setResultsLoading(true);
         
-        // Fetch all boards for this user
+        // Get all finished races
+        const finishedRaces = races.filter(r => r.status === 'finished');
+        if (finishedRaces.length === 0) {
+          setBoardResults([]);
+          setResultsLoading(false);
+          return;
+        }
+
+        // Fetch all boards for this user and finished races
         const { data: boards, error: boardsError } = await supabase
           .from('boards')
           .select(`
@@ -54,18 +64,37 @@ const Index = () => {
             locked
           `)
           .eq('user_id', user.id)
-          .eq('locked', true)
-          .order('created_at', { ascending: false });
+          .in('race_identifier', finishedRaces.map(r => r.id));
 
         if (boardsError) throw boardsError;
 
-        // Fetch predictions for each board to calculate accuracy
+        // Create a map of race_id -> board for quick lookup
+        const boardsByRace = new Map(boards?.map(b => [b.race_identifier, b]) || []);
+
+        // Process ALL finished races (including DNP)
         const resultsData: BoardResult[] = [];
         
-        for (const board of boards || []) {
-          const race = races.find(r => r.id === board.race_identifier);
-          if (!race || race.status !== 'finished') continue;
+        for (const race of finishedRaces) {
+          const board = boardsByRace.get(race.id);
 
+          if (!board) {
+            // User did not participate in this race
+            resultsData.push({
+              raceId: race.id,
+              raceName: race.name,
+              raceCountry: race.country,
+              leagueId: '',
+              leagueName: '',
+              points: 0,
+              accuracy: 0,
+              totalPredictions: 0,
+              completedAt: race.finishTime,
+              isDNP: true, // Flag for Did Not Participate
+            });
+            continue;
+          }
+
+          // User participated - calculate their results
           const { data: predictions, error: predError } = await supabase
             .from('predictions')
             .select('id, confirmed_at, position_index, marked')
@@ -99,14 +128,18 @@ const Index = () => {
             raceId: board.race_identifier,
             raceName: race.name,
             raceCountry: race.country,
-            leagueId: '', // Not needed, boards are shared across leagues
-            leagueName: '', // Not needed, boards are shared across leagues
+            leagueId: '',
+            leagueName: '',
             points: board.points || 0,
             accuracy: accuracyPercentage,
             totalPredictions,
             completedAt: race.finishTime,
+            isDNP: false,
           });
         }
+
+        // Sort by race date (most recent first)
+        resultsData.sort((a, b) => new Date(b.completedAt).getTime() - new Date(a.completedAt).getTime());
 
         setBoardResults(resultsData);
       } catch (error) {
@@ -450,8 +483,13 @@ const Index = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.05 }}
-                    onClick={() => navigate(`/race/${result.raceId}`)}
-                    className="group rounded-lg border border-border bg-card p-4 cursor-pointer hover:border-primary/30 transition-all"
+                    onClick={() => !result.isDNP && navigate(`/race/${result.raceId}`)}
+                    className={cn(
+                      "group rounded-lg border border-border bg-card p-4 transition-all",
+                      result.isDNP 
+                        ? "opacity-60" 
+                        : "cursor-pointer hover:border-primary/30"
+                    )}
                   >
                     <div className="flex items-start gap-4">
                       <CountryFlag country={result.raceCountry} className="w-12 h-8 rounded object-cover flex-shrink-0 mt-1" />
@@ -460,9 +498,13 @@ const Index = () => {
                         <div className="flex items-start justify-between gap-3 mb-2">
                           <div>
                             <h3 className="font-bold text-base truncate">{result.raceName}</h3>
-                            <p className="text-xs text-muted-foreground">All Leagues</p>
+                            <p className="text-xs text-muted-foreground">
+                              {result.isDNP ? 'Did Not Participate' : 'All Leagues'}
+                            </p>
                           </div>
-                          <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                          {!result.isDNP && (
+                            <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors flex-shrink-0" />
+                          )}
                         </div>
                         
                         <div className="grid grid-cols-2 gap-4">
@@ -471,7 +513,9 @@ const Index = () => {
                               <Trophy className="w-4 h-4 text-racing-amber" />
                               <span className="text-xs text-muted-foreground uppercase tracking-wider">Points</span>
                             </div>
-                            <p className="text-2xl font-bold font-mono">{result.points}</p>
+                            <p className="text-2xl font-bold font-mono">
+                              {result.points} {result.isDNP && <span className="text-sm text-muted-foreground">(DNP)</span>}
+                            </p>
                           </div>
                           
                           <div className="rounded-lg bg-secondary/50 p-3">
@@ -480,7 +524,7 @@ const Index = () => {
                               <span className="text-xs text-muted-foreground uppercase tracking-wider">Accuracy</span>
                             </div>
                             <p className="text-2xl font-bold font-mono">
-                              {result.accuracy.toFixed(2)}%
+                              {result.isDNP ? '—' : `${result.accuracy.toFixed(2)}%`}
                             </p>
                           </div>
                         </div>
