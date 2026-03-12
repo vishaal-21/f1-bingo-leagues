@@ -165,7 +165,11 @@ const RacePage = () => {
               setBoardLocked(true);
               setBoardSaved(true); // Prevent save button from showing
               // Keep empty predictions from createEmptyPredictions()
-              toast.info('Qualifying has started. You can still vote on claims!');
+              if (race.status === 'live') {
+                toast.info('Qualifying has started. You can still vote on claims!');
+              } else if (race.status === 'finished') {
+                toast.info('This race has finished. You did not participate in this race.');
+              }
             }
             
             setBoardLoading(false);
@@ -1489,8 +1493,9 @@ const RacePage = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="container max-w-7xl mx-auto px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col gap-3">
+            {/* Top row: Back button and profile */}
+            <div className="flex items-center justify-between">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -1498,46 +1503,57 @@ const RacePage = () => {
                 className="gap-1 px-2"
               >
                 <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Back</span>
               </Button>
-              <div>
-                <div className="flex items-center gap-2">
-                  <CountryFlag country={race.country} className="w-8 h-5 rounded object-cover" />
-                  <h1 className="text-lg font-extrabold">{race.name}</h1>
-                  {race.isSprintWeekend && (
-                    <div className="flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded bg-racing-yellow/20 text-racing-yellow border border-racing-yellow/30">
-                      <Zap className="w-3 h-3" />
-                      SPRINT WEEKEND
-                    </div>
-                  )}
-                </div>
-                {!isStandaloneMode && league && <p className="text-xs text-muted-foreground">{league.name}</p>}
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {race.status === 'live' && (
-                <div className="flex items-center gap-1.5 text-xs font-bold text-racing-red bg-racing-red/10 px-3 py-1.5 rounded-full">
-                  <Radio className="w-3 h-3 animate-pulse" />
-                  LIVE
-                </div>
-              )}
-              {race.status === 'upcoming' && (
-                <div className="flex flex-col items-end gap-0.5">
-                  <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-secondary px-3 py-1.5 rounded-full">
-                    <Clock className="w-3 h-3" />
-                    {new Date(race.lockTime).toLocaleString()}
-                  </div>
-                  <span className="text-[10px] text-muted-foreground">
-                    Board locks at {race.isSprintWeekend ? 'sprint ' : ''}qualifying
-                  </span>
-                </div>
-              )}
-              {race.status === 'finished' && (
-                <div className="flex items-center gap-1.5 text-xs font-semibold text-racing-green bg-racing-green/10 px-3 py-1.5 rounded-full">
-                  <Flag className="w-3 h-3" />
-                  FINISHED
-                </div>
-              )}
               <ProfileMenu />
+            </div>
+            
+            {/* Race info row */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
+                <CountryFlag country={race.country} className="w-8 h-5 rounded object-cover flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-base sm:text-lg font-extrabold">{race.name}</h1>
+                    {race.isSprintWeekend && (
+                      <div className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded bg-racing-yellow/20 text-racing-yellow border border-racing-yellow/30">
+                        <Zap className="w-3 h-3" />
+                        <span className="hidden sm:inline">SPRINT WEEKEND</span>
+                        <span className="sm:hidden">SPRINT</span>
+                      </div>
+                    )}
+                  </div>
+                  {!isStandaloneMode && league && <p className="text-xs text-muted-foreground truncate">{league.name}</p>}
+                </div>
+              </div>
+              
+              {/* Status badges */}
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {race.status === 'live' && (
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-racing-red bg-racing-red/10 px-3 py-1.5 rounded-full">
+                    <Radio className="w-3 h-3 animate-pulse" />
+                    LIVE
+                  </div>
+                )}
+                {race.status === 'upcoming' && (
+                  <div className="flex flex-col items-end gap-0.5">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground bg-secondary px-3 py-1.5 rounded-full whitespace-nowrap">
+                      <Clock className="w-3 h-3" />
+                      <span className="hidden sm:inline">{new Date(race.lockTime).toLocaleString()}</span>
+                      <span className="sm:hidden">{new Date(race.lockTime).toLocaleDateString()}</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                      Board locks at {race.isSprintWeekend ? 'sprint ' : ''}qualifying
+                    </span>
+                  </div>
+                )}
+                {race.status === 'finished' && (
+                  <div className="flex items-center gap-1.5 text-xs font-semibold text-racing-green bg-racing-green/10 px-3 py-1.5 rounded-full">
+                    <Flag className="w-3 h-3" />
+                    FINISHED
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>

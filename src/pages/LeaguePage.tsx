@@ -184,31 +184,29 @@ const LeaguePage = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border">
         <div className="container max-w-5xl mx-auto px-4 py-4">
-          <div className="flex items-center gap-3 mb-3">
+          <div className="flex items-center gap-2 mb-3">
             <Button variant="ghost" size="sm" onClick={() => navigate(fromTab === 'leagues' ? '/home?tab=leagues' : '/home')} className="gap-1 px-2">
               <ArrowLeft className="w-4 h-4" />
-              Back
+              <span className="hidden sm:inline">Back</span>
             </Button>
           </div>
-          <div className="flex items-start justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-                <Flag className="w-6 h-6 text-primary" />
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+                <Flag className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
               </div>
-              <div>
-                <h1 className="text-xl font-extrabold tracking-tight">{league.name}</h1>
-                <p className="text-xs text-muted-foreground">
-                  Season {league.seasonYear} · {league.scoringMode === 'points' ? 'Points' : 'Classic'} Mode · {league.memberCount} members
+              <div className="min-w-0 flex-1">
+                <h1 className="text-base sm:text-xl font-extrabold tracking-tight truncate">{league.name}</h1>
+                <p className="text-[10px] sm:text-xs text-muted-foreground line-clamp-1">
+                  Season {league.seasonYear} · {league.scoringMode === 'points' ? 'Points' : 'Classic'} · {league.memberCount} members
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={copyInviteCode} className="gap-1 font-mono text-xs">
+            <div className="flex items-center gap-2 flex-shrink-0">
+              <Button variant="outline" size="sm" onClick={copyInviteCode} className="gap-1.5 font-mono text-xs px-3 min-w-[80px]">
                 <Copy className="w-3 h-3" />
-                {league.inviteCode}
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Settings className="w-4 h-4" />
+                <span className="hidden md:inline">{league.inviteCode}</span>
+                <span className="md:hidden">{league.inviteCode.slice(0, 6)}</span>
               </Button>
               <ProfileMenu />
             </div>
