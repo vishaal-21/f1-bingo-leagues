@@ -280,20 +280,20 @@ const Index = () => {
 
       <main className="container max-w-5xl mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={(value) => navigate(`/home?tab=${value}`)} className="space-y-6">
-          <TabsList className="bg-secondary w-full justify-start">
-            <TabsTrigger value="home" className="gap-2">
+          <TabsList className="bg-secondary w-full justify-start overflow-x-auto">
+            <TabsTrigger value="home" className="gap-2 flex-shrink-0">
               <Home className="w-4 h-4" />
               Home
             </TabsTrigger>
-            <TabsTrigger value="leagues" className="gap-2">
+            <TabsTrigger value="leagues" className="gap-2 flex-shrink-0">
               <Flag className="w-4 h-4" />
               Leagues
             </TabsTrigger>
-            <TabsTrigger value="results" className="gap-2">
+            <TabsTrigger value="results" className="gap-2 flex-shrink-0">
               <Trophy className="w-4 h-4" />
               Results
             </TabsTrigger>
-            <TabsTrigger value="info" className="gap-2">
+            <TabsTrigger value="info" className="gap-2 flex-shrink-0">
               <Info className="w-4 h-4" />
               Info
             </TabsTrigger>
@@ -322,7 +322,7 @@ const Index = () => {
             ) : (
               <>
                 {liveRace && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <h3 className="text-sm font-bold uppercase tracking-wider text-racing-red flex items-center gap-2">
                       <span className="w-2 h-2 rounded-full bg-racing-red animate-pulse" />
                       Live Now
@@ -332,9 +332,9 @@ const Index = () => {
                 )}
 
                 {raceWeekRaces.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <h3 className="text-sm font-bold uppercase tracking-wider text-racing-green">Race Week – Board Open</h3>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {raceWeekRaces.map((race) => (
                         <RaceCard key={race.id} race={race} />
                       ))}
@@ -343,9 +343,9 @@ const Index = () => {
                 )}
 
                 {lockedRaces.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Upcoming (opens race week)</h3>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {lockedRaces.map((race) => (
                         <RaceCard key={race.id} race={race} />
                       ))}
@@ -354,9 +354,9 @@ const Index = () => {
                 )}
 
                 {pastRaces.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Completed</h3>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {pastRaces.map((race) => (
                         <RaceCard key={race.id} race={race} />
                       ))}
