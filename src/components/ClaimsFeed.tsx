@@ -8,9 +8,10 @@ interface ClaimsFeedProps {
   claims: Claim[];
   currentUser: User;
   onVote?: (claimId: string, approve: boolean) => void;
+  votesRequired?: Map<string, number>; // claimId -> votes needed
 }
 
-const ClaimsFeed = ({ claims, currentUser, onVote }: ClaimsFeedProps) => {
+const ClaimsFeed = ({ claims, currentUser, onVote, votesRequired }: ClaimsFeedProps) => {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'approved': return <Check className="w-4 h-4 text-racing-green" />;
@@ -55,6 +56,11 @@ const ClaimsFeed = ({ claims, currentUser, onVote }: ClaimsFeedProps) => {
                 <span className="text-racing-green">{claim.approvalsCount} ✓</span>
                 <span className="text-destructive">{claim.rejectsCount} ✗</span>
                 <span>({claim.totalVotes} votes)</span>
+                {claim.status === 'pending' && votesRequired && votesRequired.has(claim.id) && (
+                  <span className="text-racing-amber font-medium">
+                    • {votesRequired.get(claim.id)} more needed
+                  </span>
+                )}
               </div>
 
               {claim.status === 'pending' && (

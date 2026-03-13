@@ -307,6 +307,7 @@ const RacePage = () => {
       const { data: claimsData } = await supabase
         .from('claims')
         .select('prediction_id, status')
+        .eq('league_id', leagueId)
         .in('prediction_id', predictionIds);
 
       console.log('[RacePage] 📊 Loaded predictions for viewed board:', predictionsData.length);
@@ -494,6 +495,7 @@ const RacePage = () => {
           const { data: claims } = await supabase
             .from('claims')
             .select('prediction_id, status')
+            .eq('league_id', leagueId)
             .in('prediction_id', predictionIds);
           
           const approvedPredictions = new Set(
@@ -588,12 +590,13 @@ const RacePage = () => {
 
         const predictionIds = predictionsData.map(p => p.id);
 
-        // Get all claims for these predictions
+        // Get all claims for these predictions in this league
         const { data: claimsData, error: claimsError } = await supabase
           .from('claims')
           .select(`
             id,
             prediction_id,
+            league_id,
             status,
             approvals_count,
             rejects_count,
@@ -607,6 +610,7 @@ const RacePage = () => {
               text
             )
           `)
+          .eq('league_id', leagueId)
           .in('prediction_id', predictionIds)
           .order('created_at', { ascending: false });
 
@@ -625,6 +629,7 @@ const RacePage = () => {
               email: '',
               displayName: c.profiles?.display_name || c.profiles?.username || 'Unknown',
             },
+            leagueId: c.league_id || leagueId,
             status: c.status as 'pending' | 'approved' | 'rejected' | 'expired',
             approvalsCount: c.approvals_count || 0,
             rejectsCount: c.rejects_count || 0,
@@ -1171,7 +1176,7 @@ const RacePage = () => {
       return;
     }
     if (!prediction.text.trim()) return;
-    if (!user?.id) return;
+    if (!user?.id || !leagueId) return;
 
     // Prevent claims if race is finished
     if (race?.status === 'finished') {
@@ -1180,17 +1185,31 @@ const RacePage = () => {
     }
 
     try {
-      console.log('[RacePage] Creating claim for prediction:', prediction.id);
+      console.log('[RacePage] Creating claim for prediction:', prediction.id, 'in league:', leagueId);
+
+      // Check if claim already exists for this league
+      const { data: existingClaim } = await supabase
+        .from('claims')
+        .select('id')
+        .eq('prediction_id', prediction.id)
+        .eq('league_id', leagueId)
+        .single();
+
+      if (existingClaim) {
+        toast.error('Claim already exists for this prediction in this league');
+        return;
+      }
 
       // Don't mark prediction yet - only mark when approved
       // Claim will show in feed, but cell stays grey until approved
 
-      // Save claim to database
+      // Save claim to database with league_id
       const { data: claimData, error: claimError } = await supabase
         .from('claims')
         .insert({
           prediction_id: prediction.id,
           claimed_by: user.id,
+          league_id: leagueId,
           status: 'pending',
           approvals_count: 0,
           rejects_count: 0,
@@ -1198,6 +1217,7 @@ const RacePage = () => {
         .select(`
           id,
           prediction_id,
+          league_id,
           status,
           approvals_count,
           rejects_count,
@@ -1220,6 +1240,7 @@ const RacePage = () => {
         predictionId: prediction.id,
         predictionText: prediction.text,
         claimedBy: currentUser,
+        leagueId: leagueId,
         status: 'pending',
         approvalsCount: 0,
         rejectsCount: 0,
@@ -1714,17 +1735,34 @@ const RacePage = () => {
                   </Select>
                 </div>
 
-                <ClaimsFeed 
-                  claims={
-                    claims.filter(claim => {
-                      if (claimsFilter === 'pending') return claim.status === 'pending';
-                      if (claimsFilter === 'approved') return claim.status === 'approved';
-                      return true; // 'all'
-                    })
-                  } 
-                  currentUser={currentUser} 
-                  onVote={handleVote} 
-                />
+                {/* Calculate votes required for each claim */}
+                {(() => {
+                  const votesRequired = new Map<string, number>();
+                  const totalPossibleVoters = members.length - 1; // Exclude claimant
+                  const votesNeededToPass = Math.ceil(totalPossibleVoters * 0.6);
+                  
+                  claims.forEach(claim => {
+                    if (claim.status === 'pending') {
+                      const stillNeeded = Math.max(0, votesNeededToPass - claim.approvalsCount);
+                      votesRequired.set(claim.id, stillNeeded);
+                    }
+                  });
+                  
+                  return (
+                    <ClaimsFeed 
+                      claims={
+                        claims.filter(claim => {
+                          if (claimsFilter === 'pending') return claim.status === 'pending';
+                          if (claimsFilter === 'approved') return claim.status === 'approved';
+                          return true; // 'all'
+                        })
+                      } 
+                      currentUser={currentUser} 
+                      onVote={handleVote} 
+                      votesRequired={votesRequired}
+                    />
+                  );
+                })()}
               </>
             )}
             {!boardLocked && (

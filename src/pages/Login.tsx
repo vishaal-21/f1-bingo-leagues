@@ -36,6 +36,26 @@ export default function Login() {
                     return;
                 }
 
+                // Check if username already exists BEFORE creating account
+                const { data: existingProfile, error: checkError } = await supabase
+                    .from('profiles')
+                    .select('username')
+                    .eq('username', username.trim())
+                    .maybeSingle();
+
+                if (checkError) {
+                    console.error('Error checking username:', checkError);
+                    toast.error('Failed to verify username. Please try again.');
+                    setLoading(false);
+                    return;
+                }
+
+                if (existingProfile) {
+                    toast.error('Username already exists. Please choose a different username.');
+                    setLoading(false);
+                    return;
+                }
+
                 // Sign up the user
                 const { data, error: signUpError } = await supabase.auth.signUp({ 
                     email, 
@@ -67,7 +87,18 @@ export default function Login() {
 
                     if (profileError) {
                         console.error('Profile creation error:', profileError);
-                        toast.error('Account created but profile setup failed. Please contact support.');
+                        
+                        // Check if it's a duplicate username error
+                        if (profileError.code === '23505' || profileError.message?.includes('duplicate') || profileError.message?.includes('unique')) {
+                            toast.error('Username was just taken by another user. Please try a different username.');
+                        } else {
+                            toast.error('Failed to create profile. Please contact support.');
+                        }
+                        
+                        // Clean up the auth account since profile creation failed
+                        await supabase.auth.signOut();
+                        setLoading(false);
+                        return;
                     } else {
                         toast.success('Successfully signed up!');
                     }
