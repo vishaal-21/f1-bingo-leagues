@@ -1,4 +1,4 @@
-import { Flag, Users, Trophy, ChevronRight, Home, Info, Target } from 'lucide-react';
+import { Flag, Users, Trophy, ChevronRight, Home, Info, Target, Swords } from 'lucide-react';
 import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
@@ -6,10 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useLeagues } from '@/context/LeagueContext';
 import { useRaces } from '@/context/RaceContext';
 import { useAuth } from '@/context/AuthContext';
+import { useRivalry } from '@/context/RivalryContext';
 import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import CreateLeagueDialog from '@/components/CreateLeagueDialog';
 import JoinLeagueDialog from '@/components/JoinLeagueDialog';
+import ChallengeRivalDialog from '@/components/ChallengeRivalDialog';
 import HowToPlayDialog from '@/components/HowToPlayDialog';
 import RaceCard from '@/components/RaceCard';
 import { CountryFlag } from '@/components/CountryFlag';
@@ -34,6 +36,7 @@ const Index = () => {
   const { leagues, loading } = useLeagues();
   const { races } = useRaces();
   const { user, isLoading } = useAuth();
+  const { rivalries, pendingInvites, activeRivals, loading: rivalsLoading, acceptRivalInvite, declineRivalInvite } = useRivalry();
   const [boardResults, setBoardResults] = useState<BoardResult[]>([]);
   const [resultsLoading, setResultsLoading] = useState(true);
   const activeTab = searchParams.get('tab') || 'home';
@@ -289,6 +292,10 @@ const Index = () => {
               <Flag className="w-4 h-4" />
               Leagues
             </TabsTrigger>
+            <TabsTrigger value="rivals" className="gap-2 flex-shrink-0">
+              <Swords className="w-4 h-4" />
+              Rivals
+            </TabsTrigger>
             <TabsTrigger value="results" className="gap-2 flex-shrink-0">
               <Trophy className="w-4 h-4" />
               Results
@@ -327,7 +334,7 @@ const Index = () => {
                       <span className="w-2 h-2 rounded-full bg-racing-red animate-pulse" />
                       Live Now
                     </h3>
-                    <RaceCard race={liveRace} />
+                    <RaceCard race={liveRace} showCountdown={true} />
                   </div>
                 )}
 
@@ -336,7 +343,7 @@ const Index = () => {
                     <h3 className="text-sm font-bold uppercase tracking-wider text-racing-green">Race Week – Board Open</h3>
                     <div className="space-y-3">
                       {raceWeekRaces.map((race) => (
-                        <RaceCard key={race.id} race={race} />
+                        <RaceCard key={race.id} race={race} showCountdown={true} />
                       ))}
                     </div>
                   </div>
@@ -434,6 +441,116 @@ const Index = () => {
                       <p className="text-[10px] text-muted-foreground font-mono">
                         INVITE: {league.inviteCode}
                       </p>
+                    </div>
+                  </motion.div>
+                ))}
+              </section>
+            )}
+          </TabsContent>
+
+          {/* RIVALS TAB */}
+          <TabsContent value="rivals" className="space-y-6">
+            <motion.section
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center space-y-4"
+            >
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+                My <span className="text-gradient-race">Rivals</span>
+              </h2>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Challenge friends to 1v1 competitions across the season.
+              </p>
+              <div className="flex items-center justify-center">
+                <ChallengeRivalDialog />
+              </div>
+            </motion.section>
+
+            {/* Pending Invites */}
+            {pendingInvites.length > 0 && (
+              <motion.section
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-3"
+              >
+                <h3 className="text-sm font-bold uppercase tracking-wider text-racing-yellow">Pending Challenges</h3>
+                <div className="space-y-2">
+                  {pendingInvites.map((rivalry) => (
+                    <div
+                      key={rivalry.id}
+                      className="rounded-lg border border-racing-yellow/30 bg-racing-yellow/5 p-4 flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="font-bold">{rivalry.rivalUser?.displayName}</p>
+                        <p className="text-xs text-muted-foreground">Challenged you to a rivalry</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => acceptRivalInvite(rivalry.id)}
+                          className="px-3 py-1.5 bg-primary text-primary-foreground rounded text-xs font-semibold hover:bg-primary/90 transition-colors"
+                        >
+                          Accept
+                        </button>
+                        <button
+                          onClick={() => declineRivalInvite(rivalry.id)}
+                          className="px-3 py-1.5 bg-secondary text-secondary-foreground rounded text-xs font-semibold hover:bg-secondary/80 transition-colors"
+                        >
+                          Decline
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.section>
+            )}
+
+            {/* Active Rivals */}
+            {rivalsLoading ? (
+              <div className="text-center py-12">
+                <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-3" />
+                <p className="text-sm text-muted-foreground">Loading rivalries...</p>
+              </div>
+            ) : activeRivals.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-center py-12 px-4"
+              >
+                <div className="w-16 h-16 rounded-full bg-secondary/50 flex items-center justify-center mx-auto mb-4">
+                  <Swords className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-bold mb-2">No active rivalries</h3>
+                <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+                  Challenge a friend to see who's the ultimate F1 predictor!
+                </p>
+              </motion.div>
+            ) : (
+              <section className="grid gap-4 sm:grid-cols-2">
+                {activeRivals.map((rivalry, index) => (
+                  <motion.div
+                    key={rivalry.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    onClick={() => navigate(`/rival/${rivalry.id}`)}
+                    className="group rounded-xl border border-border bg-card p-5 cursor-pointer hover:border-primary/30 transition-all"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <h3 className="font-bold text-lg flex items-center gap-2">
+                          <Swords className="w-4 h-4 text-racing-red" />
+                          {rivalry.rivalUser?.displayName}
+                        </h3>
+                        <p className="text-xs text-muted-foreground">
+                          Active since {new Date(rivalry.acceptedAt || rivalry.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                    <div className="flex items-center gap-4 text-xs">
+                      <span className="px-2 py-1 rounded-full bg-racing-green/10 text-racing-green font-semibold">
+                        Season 2026
+                      </span>
                     </div>
                   </motion.div>
                 ))}

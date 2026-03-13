@@ -66,6 +66,7 @@ export interface Claim {
   predictionId: string;
   predictionText: string;
   claimedBy: User;
+  leagueId: string;
   status: ClaimStatus;
   approvalsCount: number;
   rejectsCount: number;
@@ -81,4 +82,49 @@ export interface RaceScore {
   racePoints: number;
   correctPredictions: number;
   hasBingo: boolean;
+}
+
+// Rivalries types
+export type RivalryStatus = 'pending' | 'active' | 'declined' | 'ended';
+
+export interface Rivalry {
+  id: string;
+  user1Id: string;
+  user2Id: string;
+  status: RivalryStatus;
+  invitedBy: string;
+  invitedAt: string;
+  acceptedAt?: string;
+  createdAt: string;
+  // Populated fields
+  rivalUser?: User;
+  cumulativeScore?: {
+    myWins: number;
+    rivalWins: number;
+    ties: number;
+  };
+}
+
+export interface RivalApproval {
+  id: string;
+  rivalryId: string;
+  raceId: string;
+  predictionId: string;
+  approvedBy: string;
+  approved: boolean;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface RivalResult {
+  id: string;
+  rivalryId: string;
+  raceId: string;
+  userId: string;
+  boardId?: string;
+  points: number;
+  correctPredictions: number;
+  totalPredictions: number;
+  bingos: number;
+  calculatedAt: string;
 }
